@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dostt Support — Admin</title>
+  <link rel="icon" href="/shared/dostt-logo.png" />
+  <link rel="stylesheet" href="/shared/tokens.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="brand"><img src="/shared/dostt-logo.png" alt="" class="brand-logo" />Dostt Support</div>
+      <h1>Admin sign in</h1>
+      <label>Email<input id="loginEmail" type="email" placeholder="you@getlokalapp.com" /></label>
+      <label>Password<input id="loginPassword" type="password" /></label>
+      <button id="loginBtn" class="primary-btn">Sign in</button>
+      <p id="loginError" class="error-text" hidden></p>
+    </div>
+  </div>
+
+  <div id="dashboard" class="dashboard" hidden>
+    <header class="topbar">
+      <div class="brand"><img src="/shared/dostt-logo.png" alt="" class="brand-logo" />Dostt Support — Ticket Queue</div>
+      <div class="topbar-right">
+        <span id="adminName"></span>
+        <button id="logoutBtn" class="ghost-btn">Log out</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="toolbar">
+        <label>Status
+          <select id="statusFilter">
+            <option value="">All</option>
+            <option value="submitted">Submitted</option>
+            <option value="assigned">Assigned</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+        </label>
+        <button id="refreshBtn" class="ghost-btn">Refresh</button>
+      </div>
+
+      <table class="ticket-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>Category</th><th>Sub-issue</th><th>Status</th>
+            <th>Escalation</th><th>Callback?</th><th>Refund checked</th><th>Real ticket</th><th>SLA due</th><th>Created</th>
+          </tr>
+        </thead>
+        <tbody id="ticketRows"></tbody>
+      </table>
+      <p id="emptyState" class="empty-state" hidden>No tickets in this view.</p>
+    </main>
+  </div>
+
+  <div id="detailOverlay" class="overlay" hidden>
+    <div class="detail-card">
+      <button id="closeDetail" class="close-btn">&times;</button>
+      <div id="detailBody"></div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

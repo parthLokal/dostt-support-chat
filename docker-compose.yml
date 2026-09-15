@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dostt-support-postgres
+    environment:
+      POSTGRES_USER: dostt
+      POSTGRES_PASSWORD: dostt
+      POSTGRES_DB: dostt_support
+    ports:
+      # 5435, not 5432/5433/5434 — avoids clashing with other local Postgres
+      # instances (including the AstroHelp sibling project's, on 5434).
+      - "5435:5432"
+    volumes:
+      - dostt_support_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dostt"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Optional — for exercising the actual container locally before deploying
+  # it anywhere (`docker compose up`). Day-to-day dev still runs
+  # `uvicorn app.main:app --reload` directly against this same postgres
+  # service on localhost:5435, per README; this service is the same image
+  # a real deployment would run, so DATABASE_URL below points at the
+  # postgres *service name*, not localhost, matching how it'll actually be
+  # networked in production.
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dostt-support-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://dostt:dostt@postgres:5432/dostt_support
+    ports:
+      - "8000:8000"
+
+volumes:
+  dostt_support_pgdata:

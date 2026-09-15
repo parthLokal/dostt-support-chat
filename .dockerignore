@@ -1,0 +1,10 @@
+**/__pycache__
+**/*.pyc
+.venv
+backend/.venv
+backend/.env
+.env
+backend/uploads
+backend/tests
+.git
+.DS_Store

@@ -1,0 +1,79 @@
+/* ---------------------------------------------------------------------
+   Shared design tokens for both Dostt frontends (chat + admin).
+   Colors, type, radii defined once here and imported by both
+   frontend/css/styles.css and admin/admin.css — so the two can't visually
+   drift the way separately-maintained stylesheets tend to. Same idea as
+   the AstroHelp sibling project's packages/shared/tailwind-preset.js,
+   adapted to plain CSS since this project has no build step / npm
+   workspace ("Python only" — see repo root README).
+
+   v2 (2026-09-08): flattened after reviewing AstroHelp's actual chat-app
+   source (MessageBubble.tsx, ChatComposer.tsx, TypingIndicator.tsx,
+   ToolActionIndicator.tsx) — its "professional" feel comes from being
+   quiet: flat solid surfaces + a soft ambient shadow, not translucent
+   glass/blur/glow. --surface-1/2/3 and --shadow-* below are that same
+   flat-elevation approach, translated to Dostt's dark palette instead of
+   AstroHelp's light cream one. The old --bg-card/--bg-frame/--glass-blur
+   tokens are kept (admin/admin.css still uses them) but no longer used by
+   the chat frontend.
+
+   Grounded in the real app's own code too (HomeHeader.js, shared
+   2026-09-02): theme.colors.base.black/white + Poppins_600SemiBold — see
+   the font-family and near-black --bg-page below.
+--------------------------------------------------------------------- */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
+
+:root {
+  /* Page + flat elevation scale (replaces glass/blur for the chat UI) */
+  --bg-page: #0b0a10;
+  --surface-1: #121017;
+  /* header / composer chrome */
+  --surface-2: #1a1720;
+  /* bot bubble, list rows */
+  --surface-3: #221e29;
+  /* hover / active state */
+  --border-hairline: rgba(255, 255, 255, 0.07);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.35), 0 14px 32px -12px rgba(0, 0, 0, 0.55);
+
+  /* Legacy glass tokens — admin/admin.css still uses these */
+  --bg-frame: rgba(10, 10, 13, 0.6);
+  --bg-card: rgba(255, 255, 255, 0.06);
+  --bg-card-2: rgba(255, 255, 255, 0.1);
+  --border-soft: rgba(255, 255, 255, 0.14);
+  --border-softer: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(20px) saturate(160%);
+
+  /* Brand accent — Dostt purple, reserved for actions/highlights only,
+     never base chrome (confirmed by the real HomeHeader: black/white for
+     structure, color only for state) */
+  --purple-1: #8b6bff;
+  --purple-2: #a97ff5;
+  --purple-glow: rgba(139, 107, 255, 0.35);
+  --bubble-user: linear-gradient(135deg, var(--purple-1), var(--purple-2));
+
+  /* Text */
+  --text-primary: #f2f1f5;
+  --text-secondary: #a7a3b3;
+  --text-faint: #716d7d;
+
+  /* Restrained status colors — muted, not neon: success reads as sage,
+     attention as warm gold, danger as muted clay. */
+  --success: #7fb69e;
+  --success-bg: rgba(127, 182, 158, 0.14);
+  --attention: #cda15e;
+  --attention-bg: rgba(205, 161, 94, 0.14);
+  --danger: #c17b6b;
+  --danger-bg: rgba(193, 123, 107, 0.14);
+
+  /* Type — Poppins throughout, per the real app (Poppins_600SemiBold) */
+  --font-sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Radii */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+}

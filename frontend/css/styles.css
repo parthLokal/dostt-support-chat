@@ -1,0 +1,384 @@
+/* Color/type/radius tokens live in /shared/tokens.css. Flat surfaces + soft
+   shadows (no glass/blur/glow) — see that file's v2 header comment for why. */
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+
+/* Buttons default to the OS-native control appearance in several browsers
+   (visible as a stray light box on transparent buttons — e.g. Safari)
+   unless appearance is explicitly reset. */
+button {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  color: inherit;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-page);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+}
+
+.chat-shell {
+  height: 100dvh;
+  /* --app-height is set by app.js from window.visualViewport's actual
+     height whenever it changes — 100dvh alone reliably shrinks when the
+     on-screen keyboard opens in a normal mobile browser tab, but many
+     native apps' embedded WebViews never resize the layout viewport at
+     all when their keyboard opens (depends on the host app's own Android
+     windowSoftInputMode / iOS WKWebView config, which we don't control),
+     so the composer bar below silently ends up hidden underneath the
+     keyboard with no CSS-only way to detect it. visualViewport tracks the
+     actually-visible area independent of that. Falls back to 100dvh
+     unchanged if JS hasn't set it yet (or is unavailable). */
+  height: var(--app-height, 100dvh);
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-page);
+}
+
+/* ---------------- Header ---------------- */
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 16px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border-hairline);
+  flex-shrink: 0;
+}
+.brand-mark {
+  width: 36px; height: 36px;
+  border-radius: 11px;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+}
+.chat-header .titles { flex: 1; min-width: 0; }
+.chat-header .titles h1 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.chat-header .tagline {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+.header-actions { display: flex; align-items: center; gap: 6px; }
+.chat-header select {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  padding: 6px 7px;
+  outline: none;
+  max-width: 86px;
+}
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-faint);
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.icon-btn svg { width: 16px; height: 16px; }
+.icon-btn:hover { background: var(--surface-2); color: var(--text-primary); }
+
+/* ---------------- Message area ---------------- */
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.chat-body::-webkit-scrollbar { width: 6px; }
+.chat-body::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
+
+.row { display: flex; width: 100%; flex-direction: column; }
+.row.bot { align-items: flex-start; }
+.row.user { align-items: flex-end; }
+
+.bubble {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  box-shadow: var(--shadow-sm);
+}
+.row.bot .bubble {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border-bottom-left-radius: 4px;
+}
+.row.user .bubble {
+  background: var(--bubble-user);
+  color: white;
+  border-bottom-right-radius: 4px;
+  font-weight: 500;
+  box-shadow: 0 4px 14px -6px var(--purple-glow);
+}
+
+.typing .bubble {
+  display: flex; gap: 4px; align-items: center; padding: 12px 15px;
+  background: var(--surface-2);
+}
+.typing .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-faint);
+  animation: bounce 1.2s infinite ease-in-out;
+}
+.typing .dot:nth-child(2) { animation-delay: 0.15s; }
+.typing .dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+/* ---------------- Guided-flow lists (categories / calls / FAQs) ---------------- */
+.card-grid {
+  display: flex; flex-direction: column;
+  width: 100%;
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.option-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-hairline);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  width: 100%;
+  transition: background 0.15s;
+}
+.card-grid .option-card:last-child { border-bottom: none; }
+.option-card:hover { background: var(--surface-3); }
+.option-card .icon {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: var(--purple-2);
+}
+.option-card .icon svg { width: 17px; height: 17px; }
+.option-card .body { flex: 1; min-width: 0; }
+.option-card .title { font-size: 13.5px; font-weight: 600; }
+.option-card .subtitle { font-size: 11.5px; color: var(--text-faint); margin-top: 1px; }
+.option-card .chev { color: var(--text-faint); font-size: 14px; }
+.option-card.muted .title, .option-card.muted .icon { color: var(--text-secondary); }
+
+/* ---------------- Pills / chips ---------------- */
+.pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill-btn {
+  padding: 8px 15px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pill-btn.primary {
+  background: var(--bubble-user);
+  border: none;
+  color: white;
+}
+.pill-btn:hover { border-color: var(--purple-1); }
+.pill-btn.primary:hover { filter: brightness(1.08); }
+
+/* ---------------- Result card (ticket-raised confirmation) ---------------- */
+.result-card {
+  width: 100%;
+  border-radius: var(--radius-md);
+  padding: 13px 14px;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
+  border-left: 3px solid var(--purple-1);
+}
+.result-card .headline { font-weight: 700; font-size: 13.5px; margin-bottom: 5px; color: var(--purple-2); }
+.result-card .rule-tag {
+  display: inline-block; font-size: 10px; font-weight: 600;
+  color: var(--text-faint); background: var(--surface-3);
+  padding: 2px 8px; border-radius: var(--radius-full); margin-bottom: 7px;
+}
+.result-card .reason { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+/* ---------------- Ticket card ---------------- */
+.ticket-card {
+  border-radius: var(--radius-md);
+  padding: 13px 14px;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+}
+.ticket-card .field { margin-bottom: 8px; }
+.ticket-card .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 2px; }
+.ticket-card .value { font-size: 13px; color: var(--text-primary); }
+.ticket-card textarea {
+  width: 100%; background: var(--surface-3); color: var(--text-primary);
+  border: 1px solid var(--border-hairline); border-radius: var(--radius-sm);
+  padding: 8px 10px; font-size: 12.5px; font-family: inherit; resize: vertical; min-height: 56px;
+}
+
+/* ---------------- Composer ---------------- */
+.composer-footer {
+  border-top: 1px solid var(--border-hairline);
+  background: var(--surface-1);
+  flex-shrink: 0;
+}
+.attachment-chip {
+  display: flex; align-items: center; gap: 6px;
+  margin: 8px 12px 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  font-size: 12px;
+  width: fit-content;
+}
+.attachment-chip svg { width: 13px; height: 13px; flex-shrink: 0; }
+.attachment-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+.attachment-chip button {
+  background: none; border: none; color: var(--text-faint); cursor: pointer;
+  font-size: 15px; line-height: 1; padding: 0 0 0 2px;
+}
+.attachment-chip button:hover { color: var(--text-primary); }
+
+.input-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  flex-shrink: 0;
+}
+.input-bar input {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-full);
+  padding: 10px 16px;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input-bar input:focus { border-color: var(--purple-1); }
+.input-bar input::placeholder { color: var(--text-faint); }
+.input-bar button {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bubble-user);
+  color: white;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.15s;
+}
+.input-bar button svg { width: 16px; height: 16px; }
+.input-bar button:disabled { opacity: 0.35; cursor: default; }
+
+.disabled-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-faint);
+  padding: 8px 14px 4px;
+}
+
+.trace-lines { display: flex; flex-direction: column; gap: 1px; margin: 0 0 -2px 3px; }
+.trace-line { font-size: 10.5px; color: var(--text-faint); }
+
+@media (min-width: 641px) {
+  body { display: flex; justify-content: center; }
+  .chat-shell { box-shadow: var(--shadow-md); border-left: 1px solid var(--border-hairline); border-right: 1px solid var(--border-hairline); }
+}
+
+/* ---------------- FAQ suggestion chips (first-message empty state) ---------------- */
+.faq-chip-block { width: 100%; }
+.faq-chip-label {
+  font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-faint); margin: 0 0 8px 2px;
+}
+.faq-chip-row { display: flex; flex-wrap: wrap; gap: 7px; }
+.faq-chip {
+  padding: 7px 13px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.faq-chip:hover { border-color: var(--purple-1); color: var(--text-primary); }
+
+/* ---------------- Bottom tab bar ---------------- */
+.tab-bar {
+  display: flex;
+  border-top: 1px solid var(--border-hairline);
+  background: var(--surface-1);
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab-btn {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 0 7px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text-faint);
+}
+.tab-btn svg { width: 19px; height: 19px; }
+.tab-btn span { font-size: 10px; font-weight: 600; }
+.tab-btn.active { color: var(--purple-2); }
+
+/* ---------------- My Tickets view ---------------- */
+.tickets-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ticket-item {
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-sm);
+}
+.ticket-item .top-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.ticket-item .category { font-size: 13.5px; font-weight: 600; }
+.ticket-item .sub { font-size: 11.5px; color: var(--text-faint); margin-bottom: 6px; }
+.ticket-item .meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text-faint); }
+.ticket-status-pill {
+  display: inline-block; padding: 2px 9px; border-radius: var(--radius-full);
+  font-size: 10px; font-weight: 700; text-transform: capitalize; white-space: nowrap;
+}
+.ticket-status-pill.st-submitted, .ticket-status-pill.st-assigned { background: var(--attention-bg); color: var(--attention); }
+.ticket-status-pill.st-in_progress { background: rgba(139, 107, 255, 0.16); color: var(--purple-2); }
+.ticket-status-pill.st-resolved { background: var(--success-bg); color: var(--success); }
+.ticket-status-pill.st-closed { background: rgba(167, 163, 179, 0.14); color: var(--text-secondary); }
+.tickets-empty { text-align: center; color: var(--text-faint); font-size: 13px; padding: 40px 0; }

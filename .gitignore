@@ -1,0 +1,25 @@
+# Secrets — never commit real credentials
+.env
+backend/.env
+*.env
+!.env.example
+!backend/.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+backend/.venv/
+*.egg-info/
+
+# Uploads (user-submitted ticket screenshots — never committed, ever)
+backend/uploads/
+uploads/
+
+# OS/editor cruft
+.DS_Store
+.vscode/
+.idea/
+
+# Node (Playwright etc., if ever run from repo root)
+node_modules/
