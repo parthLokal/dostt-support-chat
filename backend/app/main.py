@@ -14,6 +14,16 @@ from app.core.errors import AppError
 
 logger = logging.getLogger(__name__)
 
+# Without this, Python's root logger defaults to WARNING with no configured
+# handler — every logger.info(...) call anywhere in the app (including the
+# ticket real-API-mirror diagnostics in ticket_service.py, added 2026-09-16
+# specifically to make silent no-ops debuggable) is silently dropped rather
+# than reaching stdout, regardless of whether the surrounding
+# infra/log-viewer is otherwise working correctly. This was a real
+# contributing factor, not just an infra/log-viewer issue, the last few
+# times pod logs appeared to show nothing at all.
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
 assert_admin_secrets_are_safe(settings)
 
 # The chat webview and the admin dashboard are both plain static

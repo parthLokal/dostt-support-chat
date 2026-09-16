@@ -15,6 +15,7 @@ from datetime import timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.jwt_claims import country_from_token, decode_unverified_claims, user_type_from_token
 from app.core.time import utcnow
 from app.data.issue_catalog import issue_id_for
@@ -244,6 +245,7 @@ def _mirror_to_real_api(
     attachment: attachment_service.ConsumedAttachment | None,
 ) -> None:
     if auth_token is None:
+        logger.info("Ticket #%s: real-API mirror SKIPPED — no auth_token provided", ticket.id)
         return  # not wired up yet for this session — local ticket stands alone, not an error
 
     resolved_language_id = language_id
@@ -260,10 +262,20 @@ def _mirror_to_real_api(
         candidate = claims.get("user_payload", {}).get("onboarded_language_id") if claims else None
         resolved_language_id = candidate if isinstance(candidate, int) else None
     if resolved_language_id is None:
+        logger.info(
+            "Ticket #%s: real-API mirror SKIPPED — no language_id from explicit param, "
+            "account.onboarded_language_id, or the token's own claim (category=%s)",
+            ticket.id, ticket.category,
+        )
         return  # no language_id from any source yet — can't call the real API without one
 
     issue_id = issue_id_for(ticket.category)
     if issue_id is None:
+        logger.info(
+            "Ticket #%s: real-API mirror SKIPPED — category '%s' has no confirmed issue_id "
+            "for the current DOSTT_API_BASE_URL (%s) — see app/data/issue_catalog.py",
+            ticket.id, ticket.category, settings.DOSTT_API_BASE_URL,
+        )
         return  # category not yet confirmed against the real issue catalog — see issue_catalog.py
 
     resolved_user_type = user_type_code
@@ -295,10 +307,15 @@ def _mirror_to_real_api(
             image_content_type=attachment.content_type if attachment else "image/jpeg",
             app_version=app_version,
         )
-    except dostt_api_client.DosttApiError:
-        logger.exception("Real ticket-API mirror failed for local ticket #%s — local ticket stands alone", ticket.id)
+    except dostt_api_client.DosttApiError as e:
+        logger.exception(
+            "Ticket #%s: real-API mirror FAILED — status=%s body=%s (issue_id=%s, language_id=%s, "
+            "user_type=%s, country=%s) — local ticket stands alone",
+            ticket.id, e.status_code, e.body, issue_id, resolved_language_id, resolved_user_type, resolved_country,
+        )
         return
 
+    logger.info("Ticket #%s: real-API mirror SUCCEEDED — real_ticket_id=%s", ticket.id, real_id)
     ticket.real_ticket_id = real_id
     db.commit()
 
