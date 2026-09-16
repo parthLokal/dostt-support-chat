@@ -22,8 +22,13 @@ def _fake_token(user_type=1, country="US", onboarded_language_id=7) -> str:
 
 
 def _create_with_automation(db, account, monkeypatch=None, **overrides):
+    # not_showing_face is mapped in BOTH the staging and production issue
+    # catalogs (see app/data/issue_catalog.py) — tests below that don't care
+    # about the specific issue_id (just that the mirror actually fires) use
+    # this default so they pass regardless of which DOSTT_API_BASE_URL is
+    # ambient in the test settings.
     kwargs = dict(
-        account_id=account.id, category="charged_incorrectly", sub_category="extra coins",
+        account_id=account.id, category="not_showing_face", sub_category="extra coins",
         description="d", description_en="d",
     )
     kwargs.update(overrides)
@@ -41,6 +46,12 @@ def test_no_auth_token_skips_real_api_entirely(db, account, admin, monkeypatch):
 
 
 def test_confirmed_category_with_auth_token_calls_real_api(db, account, admin, monkeypatch):
+    # Explicitly forces production mode — charged_incorrectly only has a
+    # confirmed issue_id there (361, live-tested 2026-09-08), not on
+    # staging (see app/data/issue_catalog.py's two separate catalogs).
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "DOSTT_API_BASE_URL", "https://api.getlokalapp.com")
+
     captured = {}
 
     def fake_create_ticket(**kwargs):
@@ -50,14 +61,14 @@ def test_confirmed_category_with_auth_token_calls_real_api(db, account, admin, m
     monkeypatch.setattr(ticket_service.dostt_api_client, "create_ticket", fake_create_ticket)
 
     ticket = _create_with_automation(
-        db, account,
+        db, account, category="charged_incorrectly",
         auth_token="tok123", language_id=1, callback_requested=True,
     )
 
     assert ticket.real_ticket_id == 2119
     assert captured["auth_token"] == "tok123"
     assert captured["language_id"] == 1
-    assert captured["issue_id"] == 361  # charged_incorrectly, confirmed 2026-09-08
+    assert captured["issue_id"] == 361  # charged_incorrectly, confirmed 2026-09-08 (production)
     assert captured["is_call_opted_in"] is True
     assert captured["description"] == "d"
 
@@ -178,7 +189,7 @@ def test_user_type_falls_back_to_token_claim_when_no_account(db, account, admin,
     captured = {}
     monkeypatch.setattr(ticket_service.dostt_api_client, "create_ticket", lambda **kw: captured.update(kw) or 1)
     ticket = ticket_service.create_ticket(
-        db, account_id=account.id, category="charged_incorrectly", sub_category="s",
+        db, account_id=account.id, category="not_showing_face", sub_category="s",
         description="d", description_en="d", preferred_language="en",
     )
 

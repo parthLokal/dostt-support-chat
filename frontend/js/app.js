@@ -428,11 +428,54 @@ function setupKeyboardSafeViewport() {
 }
 setupKeyboardSafeViewport();
 
-// Belt-and-suspenders: nudge the composer fully into view once the keyboard's
-// open/resize animation has settled, in case the WebView still leaves it
-// partially covered or scrolls oddly on focus (a known iOS WKWebView quirk).
+// Second, independent layer: a temporary bottom spacer added on focus. Needed
+// because a lot of Android WebViews use windowSoftInputMode="adjustPan" (a
+// very common default, set by the *host app*, not us) — in that mode the
+// WebView's viewport dimensions never change at all when the keyboard opens,
+// so visualViewport above never fires and --app-height never updates; the
+// page has no signal the keyboard exists. Making the page temporarily taller
+// than one screen gives the browser/WebView's own built-in "scroll the
+// focused element into view" behavior — which exists even in pan mode, since
+// it's a browser-level behavior, not something that depends on detecting a
+// viewport resize — actual room to reveal the composer above the keyboard.
+let $keyboardSpacer = null;
+function keyboardSpacer() {
+  if (!$keyboardSpacer) {
+    $keyboardSpacer = document.createElement("div");
+    $keyboardSpacer.id = "keyboardSpacer";
+    $keyboardSpacer.style.height = "0px";
+    // Appended as a SIBLING of .chat-shell, directly on body — not inside it.
+    // .chat-shell is a fixed-height (100dvh) flex column whose chat-body
+    // child has flex:1, which happily shrinks to absorb any new flex sibling
+    // instead of letting the container actually overflow — so a spacer
+    // placed inside it changes nothing about the page's real scrollable
+    // height. Placed outside, it's genuine extra content below the fixed
+    // shell, which is what actually makes body.scrollHeight grow.
+    document.body.appendChild($keyboardSpacer);
+  }
+  return $keyboardSpacer;
+}
 $input.addEventListener("focus", () => {
-  setTimeout(() => $composerBar.scrollIntoView({ block: "end", behavior: "smooth" }), 300);
+  setTimeout(() => {
+    // If visualViewport actually shrank, --app-height above already handles
+    // it — no spacer needed. Only add one when there was NO measured shrink
+    // at all, i.e. exactly the adjustPan case this exists for.
+    const vv = window.visualViewport;
+    const measuredShrink = vv ? Math.max(0, window.innerHeight - vv.height) : 0;
+    const spacer = keyboardSpacer();
+    spacer.style.height = measuredShrink > 40 ? "0px" : "300px";
+    // Scroll the SPACER (not the composer) flush with the bottom of the
+    // viewport. The spacer stands in for the keyboard's own footprint, so
+    // this leaves the composer sitting directly above it — i.e. right where
+    // the visible area actually ends once a real keyboard covers the
+    // bottom ~300px, rather than flush with the bottom of the full
+    // (keyboard-unaware) viewport, which would put it exactly where the
+    // keyboard is about to appear.
+    spacer.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, 300);
+});
+$input.addEventListener("blur", () => {
+  if ($keyboardSpacer) $keyboardSpacer.style.height = "0px";
 });
 
 populateLangSelect();
