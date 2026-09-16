@@ -48,6 +48,27 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def log_webview_entry(request: Request, call_next):
+    # uvicorn's own access log already includes the full raw request line
+    # (path + query string) for every request, so this isn't new visibility
+    # — but that one line is buried among dozens of asset requests (CSS/JS/
+    # fonts) per page load, easy to miss when scanning logs by eye. This
+    # logs ONLY the real webview entry (GET / with a query string — i.e.
+    # the host app opening the page with ?userId=&token=&version=) under a
+    # distinct, greppable tag, to directly answer "what did the app
+    # actually send" without reconstructing anything ourselves.
+    #
+    # Note: this logs the real auth token in plaintext to pod logs (uvicorn's
+    # default access log already does this too — not new exposure, just made
+    # easier to find). Fine for the active debugging this exists for; worth
+    # revisiting (e.g. redacting the token value) before this is relied on
+    # as permanent, always-on logging.
+    if request.url.path == "/" and request.method == "GET" and request.url.query:
+        logger.info("WEBVIEW_ENTRY: %s", request.url.query)
+    return await call_next(request)
+
+
 @app.exception_handler(AppError)
 def handle_app_error(request: Request, exc: AppError) -> JSONResponse:
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
