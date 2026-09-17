@@ -536,6 +536,12 @@ const FAQ_SUGGESTIONS_I18N = {
 
 function t(lang, key, ...args) {
   const dict = I18N[lang] || I18N.en;
-  const val = dict[key] ?? I18N.en[key];
+  // dict[key] == null (via the loose == operator) matches undefined AND
+  // null in one comparison — the same intent as `??`, without relying on
+  // ES2020 nullish-coalescing syntax that an older/restricted WebView JS
+  // engine might fail to even parse (a SyntaxError here would silently
+  // break this whole file, and everything in app.js that depends on it,
+  // with zero visible error inside an embedded app webview).
+  const val = dict[key] == null ? I18N.en[key] : dict[key];
   return typeof val === "function" ? val(...args) : val;
 }

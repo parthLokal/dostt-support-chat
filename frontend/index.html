@@ -7,6 +7,34 @@
   <link rel="icon" href="/shared/dostt-logo.png" />
   <link rel="stylesheet" href="/shared/tokens.css" />
   <link rel="stylesheet" href="css/styles.css" />
+  <script>
+    // Catches anything that would otherwise fail completely silently inside
+    // an embedded app webview with no accessible console — including a
+    // SyntaxError in one of the later <script src> files, which would abort
+    // that whole script's execution (breaking every event listener it was
+    // supposed to set up, e.g. the send button) with zero visible sign
+    // anything went wrong. Placed before every other script tag so it's
+    // registered in time to catch parse-time failures in files loaded after
+    // it. Shows the error directly on the page — the only way to see it at
+    // all in an environment with no dev tools access.
+    window.addEventListener("error", function (e) {
+      showBootError((e.error && e.error.stack) || e.message || String(e));
+    });
+    window.addEventListener("unhandledrejection", function (e) {
+      showBootError((e.reason && e.reason.stack) || String(e.reason));
+    });
+    function showBootError(text) {
+      var el = document.getElementById("bootErrorBanner");
+      if (!el) {
+        el = document.createElement("pre");
+        el.id = "bootErrorBanner";
+        el.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;" +
+          "padding:10px;font:11px monospace;white-space:pre-wrap;max-height:50vh;overflow:auto;margin:0;";
+        document.documentElement.appendChild(el);
+      }
+      el.textContent += "JS ERROR: " + text + "\n\n";
+    }
+  </script>
 </head>
 <body>
   <div class="chat-shell">

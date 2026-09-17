@@ -12,6 +12,20 @@
 #   the build context entirely; pass it at `docker run`/deploy time instead.)
 FROM python:3.12-slim
 
+# Without this, Python's stdout is fully buffered (not line-buffered) when
+# it isn't connected to a real terminal — exactly the case inside a
+# container. Log output can sit in an internal buffer and never actually
+# reach the OS-level stdout stream that Docker/Kubernetes/Devtron's log
+# collector reads from, until the buffer fills or the process exits. For an
+# app with sporadic traffic, that buffer may just never fill — meaning
+# logging.basicConfig(level=INFO) (main.py) and every logger.info(...) call
+# could be genuinely executing inside the process while remaining
+# completely invisible in the pod's log viewer. This is a very plausible
+# explanation for logs appearing to not exist at all despite the app
+# clearly running (confirmed reachable via /health) — not necessarily an
+# infra/log-viewer problem on its own.
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
 # Dependencies first, so this layer only rebuilds when requirements.txt
