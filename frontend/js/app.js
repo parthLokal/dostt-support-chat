@@ -201,7 +201,21 @@ function selectCategory(cat) {
 
 /* --------------------------------- Calls --------------------------------- */
 async function showCallsFlow() {
-  const calls = await api.recentCalls(state.accountId);
+  // Recent Calls is backed by a live Redash/BigQuery query with no caching
+  // benefit on a first-time lookup — observed taking 30+ seconds in real
+  // testing (the query itself, not our polling, is what's slow). Without
+  // this, the UI showed nothing at all for that whole wait, indistinguishable
+  // from the app being frozen or broken.
+  const typingEl = showTyping();
+  let calls;
+  try {
+    calls = await api.recentCalls(state.accountId);
+  } catch (err) {
+    typingEl.remove();
+    botBubble(escapeHtml(t(state.lang, "connectionError")));
+    return;
+  }
+  typingEl.remove();
   if (!calls.length) { botBubble(t(state.lang, "noRecentActivity")); return; }
   cardGrid(calls.slice(0, 5).map((c) => ({
     icon: c.call_type === "video" ? ICONS.video : ICONS.phone,
@@ -231,7 +245,18 @@ async function showTransactionsFlow() {
 }
 
 async function showTxList(kind, landingCategory) {
-  const txs = await api.recentTransactions(state.accountId, kind);
+  // Same reasoning as showCallsFlow's typing indicator above — Recent
+  // Transactions hits the same kind of slow, uncached Redash/BigQuery query.
+  const typingEl = showTyping();
+  let txs;
+  try {
+    txs = await api.recentTransactions(state.accountId, kind);
+  } catch (err) {
+    typingEl.remove();
+    botBubble(escapeHtml(t(state.lang, "connectionError")));
+    return;
+  }
+  typingEl.remove();
   if (!txs.length) { botBubble(t(state.lang, "noRecentActivity")); return; }
   cardGrid(txs.slice(0, 5).map((tx) => ({
     icon: kind === "recharge" ? ICONS.card : ICONS.wallet,
